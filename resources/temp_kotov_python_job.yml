@@ -1,0 +1,67 @@
+resources:
+  # databricks bundle run -t dev wallet_steering  
+  jobs:
+    wallet_steering:
+      name: wallet-steering
+      email_notifications:
+        on_failure:
+          - serhii.kotov@stuzo.com
+        no_alert_for_skipped_runs: true
+      webhook_notifications:
+        on_start:
+          - id: d2b0af82-d13d-4f1b-8459-b0614ae091d9
+        on_success:
+          - id: d2b0af82-d13d-4f1b-8459-b0614ae091d9
+        on_failure:
+          - id: d2b0af82-d13d-4f1b-8459-b0614ae091d9
+      schedule:
+        quartz_cron_expression: 34 0 * * * ?
+        timezone_id: UTC
+        pause_status: PAUSED
+      tasks:
+        - task_key: survey_task
+          notebook_task:
+            notebook_path: /src/open_commerce/survey.ipynb
+            base_parameters:
+              input_path: s3a://oc-dev-internal-data-lake-bronze/green-changes-stage-3
+              output_path: s3a://oc-dev-internal-data-lake-bronze/green-survey-stage-1
+          new_cluster:
+            spark_version: 10.4.x-scala2.12
+            spark_conf:
+              spark.databricks.cluster.profile: singleNode
+              spark.databricks.hive.metastore.glueCatalog.enabled: "true"
+              spark.master: local[*, 4]
+              spark.sql.shuffle.partitions: "4"
+            aws_attributes:
+              first_on_demand: 1
+              availability: SPOT_WITH_FALLBACK
+              zone_id: auto
+              instance_profile_arn: arn:aws:iam::870004855556:instance-profile/oc-dev-internal-databricks-instance-profile
+            node_type_id: i3.xlarge
+            custom_tags:
+              Environment: dev
+              Namespace: oc
+              Component: databricks
+              Stage: internal
+              ResourceClass: SingleNode
+            cluster_log_conf:
+              s3:
+                destination: s3://oc-dev-internal-databricks-root/clusters/
+                region: us-east-1
+            spark_env_vars:
+              DD_API_KEY: "{{secrets/data_dog/api_key}}"
+              DD_STAGE: internal
+              DD_ENV: dev
+              GITHUB_SERVICE_USER: "{{secrets/github/service_user}}"
+              DD_SITE: datadoghq.com
+              DD_APP_KEY: "{{secrets/data_dog/app_key}}"
+              GITHUB_SERVICE_USER_TOKEN: "{{secrets/github/service_user_token}}"
+            enable_elastic_disk: true
+            runtime_engine: STANDARD
+            num_workers: 0
+      tags:
+        Component: databricks
+        Environment: green
+        Namespace: oc
+        Stage: internal
+        dev: serhii_kotov
