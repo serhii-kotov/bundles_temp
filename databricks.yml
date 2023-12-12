@@ -4,8 +4,31 @@
 bundle:
   name: temp_kotov_python
 
+artifacts:
+  default:
+    type: whl
+    path: .
+
 include:
   - resources/*.yml
+
+
+variables:
+  aws_account:
+    description: The account ID for the AWS account.
+    default: ""
+
+  environment:
+    description: The environment being deployed to.
+    default: dev
+
+  slack_webhook_id:
+    description: The GUID of the Slack Webhook for the environment.
+    default: ""
+
+  stage:
+    description: The customer being deployed to or "internal".
+    default: internal
 
 targets:
   staging:
@@ -21,6 +44,8 @@ targets:
     default: true
     workspace:
       host: https://dbc-c9bd768b-38a9.cloud.databricks.com
+      aws_account: "890710746291"
+      slack_webhook_id: d2b0af82-d13d-4f1b-8459-b0614ae091d9
 
   # Optionally, there could be a 'staging' target here.
   # (See Databricks docs on CI/CD at https://docs.databricks.com/dev-tools/bundles/index.html.)

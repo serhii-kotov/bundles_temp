@@ -21,10 +21,17 @@ resources:
       tasks:
         - task_key: survey_task
           notebook_task:
-            notebook_path: /src/open_commerce/survey.ipynb
+            notebook_path: ../src/open_commerce/survey.ipynb
             base_parameters:
               input_path: s3a://oc-dev-internal-data-lake-bronze/green-changes-stage-3
               output_path: s3a://oc-dev-internal-data-lake-bronze/green-survey-stage-1
+          libraries:
+            # By default we just include the .whl file generated for the open_commerce_data_pipelines package.
+            # See https://docs.databricks.com/dev-tools/bundles/library-dependencies.html
+            # for more information on how to add other libraries.
+            - whl: ../dist/*.whl
+            - maven:
+                coordinates: "com.crealytics:spark-excel_2.12:3.3.1_0.18.7"
           new_cluster:
             spark_version: 10.4.x-scala2.12
             spark_conf:

@@ -1,0 +1,43 @@
+from pyspark.sql.types import StructType
+
+CIGARETTES_TAB_UPC_LIST_SCHEMA = (StructType()
+                                  .add("manufacturer", "string")
+                                  .add("brand", "string")
+                                  .add("pack_upc", "string")
+                                  .add("carton_upc", "string")
+                                  .add("description", "string"))
+
+CIGARS_TAB_UPC_LIST_SCHEMA = (StructType()
+                              .add("manufacturer", "string")
+                              .add("brand", "string")
+                              .add("pack_upc", "string")
+                              .add("tray_upc", "string")
+                              .add("description", "string"))
+
+SMOKELESS_TAB_UPC_LIST_SCHEMA = (StructType()
+                                 .add("manufacturer", "string")
+                                 .add("brand", "string")
+                                 .add("can_upc", "string")
+                                 .add("roll_upc", "string")
+                                 .add("description", "string"))
+
+TDP_TAB_UPC_LIST_SCHEMA = (StructType()
+                           .add("manufacturer", "string")
+                           .add("brand", "string")
+                           .add("can_upc", "string")
+                           .add("carton_upc", "string")
+                           .add("description", "string"))
+
+EVAPOR_TAB_UPC_LIST_SCHEMA = (StructType()
+                              .add("manufacturer", "string")
+                              .add("brand", "string")
+                              .add("saleable_unit_upc", "string")
+                              .add("packing_unit_upc", "string")
+                              .add("description", "string"))
+
+TOBACCO_ACCESSORIES_UPC_LIST_SCHEMA = (StructType()
+                                       .add("manufacturer", "string")
+                                       .add("brand", "string")
+                                       .add("saleable_unit_upc", "string")
+                                       .add("packing_unit_upc", "string")
+                                       .add("description", "string"))

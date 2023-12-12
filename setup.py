@@ -4,6 +4,8 @@ setup.py configuration script describing how to build and package this project.
 This file is primarily used by the setuptools library and typically should not
 be executed directly. See README.md for how to deploy, test, and run
 the temp_kotov_python project.
+
+/usr/bin/python3 setup.py bdist_wheel
 """
 from setuptools import setup, find_packages
 
