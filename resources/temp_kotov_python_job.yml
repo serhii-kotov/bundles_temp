@@ -1,3 +1,5 @@
+# yaml-language-server: $schema=../bundle_config_schema.json
+
 resources:
   # databricks bundle run -t dev wallet_steering  
   jobs:
@@ -7,24 +9,36 @@ resources:
         on_failure:
           - serhii.kotov@stuzo.com
         no_alert_for_skipped_runs: true
+
       webhook_notifications:
         on_start:
-          - id: d2b0af82-d13d-4f1b-8459-b0614ae091d9
+          - id: ${var.slack_webhook_id}
         on_success:
-          - id: d2b0af82-d13d-4f1b-8459-b0614ae091d9
+          - id: ${var.slack_webhook_id}
         on_failure:
-          - id: d2b0af82-d13d-4f1b-8459-b0614ae091d9
+          - id: ${var.slack_webhook_id}
+
       schedule:
         quartz_cron_expression: 34 0 * * * ?
         timezone_id: UTC
         pause_status: PAUSED
       tasks:
         - task_key: survey_task
+          job_cluster_key: job_cluster
           notebook_task:
             notebook_path: ../src/open_commerce/survey.ipynb
             base_parameters:
-              input_path: s3a://oc-dev-internal-data-lake-bronze/green-changes-stage-3
-              output_path: s3a://oc-dev-internal-data-lake-bronze/green-survey-stage-1
+              input_path: s3a://oc-${var.environment}-${var.stage}-data-lake-bronze/${var.live_deployment}-changes-stage-3
+              output_path: s3a://oc-${var.environment}-${var.stage}-data-lake-bronze/${var.live_deployment}-survey-stage-1
+        - task_key: altria-cigarettes-monthly
+          job_cluster_key: job_cluster
+          depends_on:
+            - task_key: survey_task
+          notebook_task:
+            notebook_path: ../src/notebooks/bronze/products/altria/upc_list_cigarettes.py
+            base_parameters:
+              input_path: file:/dbfs/stuzo/pipelines/products/raw/altria_upc_list.xlsx
+              bronze_database_path: s3a://oc-${var.environment}-${var.stage}-data-lake-bronze
           libraries:
             # By default we just include the .whl file generated for the open_commerce_data_pipelines package.
             # See https://docs.databricks.com/dev-tools/bundles/library-dependencies.html
@@ -32,43 +46,49 @@ resources:
             - whl: ../dist/*.whl
             - maven:
                 coordinates: "com.crealytics:spark-excel_2.12:3.3.1_0.18.7"
+          # existing_cluster_id: 1110-205656-17uwdsft
+
+      job_clusters:
+        - job_cluster_key: job_cluster
           new_cluster:
-            spark_version: 10.4.x-scala2.12
+            data_security_mode: SINGLE_USER
+            enable_elastic_disk: true
+            node_type_id: i3.xlarge
+            num_workers: 0
+            runtime_engine: STANDARD
+            spark_version: 13.3.x-scala2.12
+
+            aws_attributes:
+              first_on_demand: 1
+              availability: SPOT_WITH_FALLBACK
+              zone_id: auto
+              instance_profile_arn: arn:aws:iam::${var.aws_account}:instance-profile/oc-${var.environment}-${var.stage}-databricks-instance-profile
+
+            custom_tags:
+              Environment: ${var.environment}
+              Namespace: oc
+              Component: databricks
+              Stage: ${var.stage}
+              ResourceClass: SingleNode
+
             spark_conf:
               spark.databricks.cluster.profile: singleNode
               spark.databricks.hive.metastore.glueCatalog.enabled: "true"
               spark.master: local[*, 4]
               spark.sql.shuffle.partitions: "4"
-            aws_attributes:
-              first_on_demand: 1
-              availability: SPOT_WITH_FALLBACK
-              zone_id: auto
-              instance_profile_arn: arn:aws:iam::870004855556:instance-profile/oc-dev-internal-databricks-instance-profile
-            node_type_id: i3.xlarge
-            custom_tags:
-              Environment: dev
-              Namespace: oc
-              Component: databricks
-              Stage: internal
-              ResourceClass: SingleNode
-            cluster_log_conf:
-              s3:
-                destination: s3://oc-dev-internal-databricks-root/clusters/
-                region: us-east-1
+
             spark_env_vars:
               DD_API_KEY: "{{secrets/data_dog/api_key}}"
-              DD_STAGE: internal
-              DD_ENV: dev
-              GITHUB_SERVICE_USER: "{{secrets/github/service_user}}"
-              DD_SITE: datadoghq.com
               DD_APP_KEY: "{{secrets/data_dog/app_key}}"
+              DD_ENV: ${var.environment}
+              DD_SITE: datadoghq.com
+              DD_STAGE: ${var.stage}
               GITHUB_SERVICE_USER_TOKEN: "{{secrets/github/service_user_token}}"
-            enable_elastic_disk: true
-            runtime_engine: STANDARD
-            num_workers: 0
+              GITHUB_SERVICE_USER: "{{secrets/github/service_user}}"
+
       tags:
         Component: databricks
-        Environment: green
+        live_deployment: ${var.live_deployment}
         Namespace: oc
         Stage: internal
         dev: serhii_kotov

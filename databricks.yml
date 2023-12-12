@@ -30,6 +30,10 @@ variables:
     description: The customer being deployed to or "internal".
     default: internal
 
+  live_deployment:
+    description: green or blue deployment.
+    default: blue
+
 targets:
   staging:
     workspace:
@@ -43,9 +47,13 @@ targets:
     mode: development
     default: true
     workspace:
-      host: https://dbc-c9bd768b-38a9.cloud.databricks.com
-      aws_account: "890710746291"
+        host: https://dbc-c9bd768b-38a9.cloud.databricks.com
+    variables:
+      aws_account: 870004855556
       slack_webhook_id: d2b0af82-d13d-4f1b-8459-b0614ae091d9
+      live_deployment: green
+
+
 
   # Optionally, there could be a 'staging' target here.
   # (See Databricks docs on CI/CD at https://docs.databricks.com/dev-tools/bundles/index.html.)
